@@ -1,0 +1,7 @@
+tensorflow
+keras
+scikit-image
+matplotlib
+pydot
+graphviz
+streamlit
