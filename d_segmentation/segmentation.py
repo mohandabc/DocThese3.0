@@ -91,7 +91,40 @@ def segment(img, model : str, size : float= None, superpixelate_method = 'slic')
 
     return img
 
-def compute_accuracy(segmentation_result, ground_truth ) :
+def compute_accuracy(segmentation_result, ground_truth):
+    seg_res = segmentation_result[:,:,0]
+    g_truth = ground_truth[:,:,0]
+    w = seg_res.shape[0]
+    l = seg_res.shape[1]
+    N=w*l
+    TP = TN = FP = FN = 0
+
+    TP = np.count_nonzero(seg_res & g_truth)
+    FP = np.count_nonzero(g_truth[seg_res >= 125]<125)
+    FN = np.count_nonzero(g_truth[seg_res < 125]>=125)
+    TN = N - TP - FP - FN
+    return {'sensitivity' : TP/(TP+FN),
+            'Specificity' : TN/(TN+FP),
+            'Accuracy':(TP+TN)/N}
+
+def compute_accuracy_still_slow(segmentation_result, ground_truth):
+    seg_res = segmentation_result[:,:,0]
+    g_truth = ground_truth[:,:,0]
+    w = seg_res.shape[0]
+    l = seg_res.shape[1]
+    TP = TN = FP = FN = 0
+
+    for i in range(w):
+        for j in range(l):
+            if (seg_res[i,j] == g_truth[i,j]) and (g_truth[i,j]>=125): TP+=1
+            if (seg_res[i,j] == g_truth[i,j]) and (g_truth[i,j]<125) : TN+=1
+            if (seg_res[i,j] != g_truth[i,j]) and (g_truth[i,j]>=125): FN+=1
+            if (seg_res[i,j] != g_truth[i,j]) and (g_truth[i,j]<125) : FP+=1
+
+    return {'sensitivity' : TP/(TP+FN),
+            'Specificity' : TN/(TN+FP),
+            'Accuracy':(TP+TN)/(TP+TN+FP+FN)}
+def compute_accuracy_slow(segmentation_result, ground_truth ) :
     seg_res = segmentation_result[:,:,:3]
     g_truth = ground_truth[:,:,:3]
     w = seg_res.shape[0]
