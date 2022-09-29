@@ -11,36 +11,51 @@ from d_utils import timer
 
 CONFIG ={
     'n_levels' : 2,
+    'shapes' : [(31, 31, 3), (63, 63, 3)],
+    'kernel_sizes' : [2, 4],
+    'pool_sizes' : [2, 4],
+    'filters' : 100,
+
     'batch_size' : 64,
     'epochs' : 10,
+    
 }
 
 class CNN():
     def __init__(self, nlevels=2):
         self.levels = nlevels
         self.config = CONFIG
-        
-        im_shape1 = (31, 31, 3)
-        im_shape2 = (63, 63, 3)
+        self.model = self._build_CNN()
 
-        input_1 = Input(shape=im_shape1, name="level_1")
-        M1 = Conv2D(filters = 60, kernel_size = 4, activation='relu')(input_1)
-        M1 = MaxPooling2D(pool_size = 2)(M1)
+    def _build_CNN(self):
+        im_shapes = self.config.get('shapes')
 
-        input_2 = Input(shape=im_shape2, name = "level_2")
-        M2 = Conv2D(filters = 60, kernel_size = 6, activation='relu')(input_2)
-        M2 = MaxPooling2D(pool_size = 4)(M2)
+        kernel_sizes = self.config.get('kernel_sizes')
 
-        M = concatenate(inputs = [M1, M2])
-        
-        # M = Conv2D(filters = 30, kernel_size = 4, activation='relu')(M)
-        # M = MaxPooling2D(pool_size = 2)(M)
-        # M = Dropout(0.5)(M)
+        pool_sizes = self.config.get('pool_sizes')
+
+        n_filters = self.config.get('filters')
+
+        M = []
+        inputs = []
+        for i in range(self.config.get('n_levels')):
+            input = Input(shape=im_shapes[i], name=f"level_{i+1}")
+            inputs.append(input)
+            L = Conv2D(filters = n_filters, kernel_size = kernel_sizes[i], activation='relu')(input)
+            L = MaxPooling2D(pool_size = pool_sizes[i])(L)
+            M.append(L)
+
+        M = concatenate(inputs = M)
+        M = Conv2D(filters = 100, kernel_size = 4, activation='relu')(M)
+        M = MaxPooling2D(pool_size = 2)(M)
+        M = Conv2D(filters = 100, kernel_size = 3, activation='relu')(M)
+        M = MaxPooling2D(pool_size = 4)(M)
+        M = Dropout(0.2)(M)
 
         M = Flatten()(M)
         M = Dense(2, activation='softmax', name = "classification")(M)
 
-        self.model = Model(inputs = [input_1, input_2], outputs = M)
+        return Model(inputs = inputs, outputs = M)
 
     def set_config(self, key, value):
         self.config[key] = value
@@ -62,21 +77,21 @@ class CNN():
         )
         return history
 
-    def save(self):
+    def save(self, name):
         try:
             os.mkdir('model')
         except:
             pass
-        self.model.save('model\\model.h5')
+        self.model.save(f"model\\{name}.h5")
 
     def predict(self, test_gen): 
         predictions = self.model.predict(test_gen, batch_size=self.config['batch_size'], verbose=1)
         return predictions
     
-    def display(self, graph=False):
+    def display(self, name="", graph=False):
         self.model.summary()
         if graph:
             try:
-                plot_model(self.model, to_file="model\\model.png", show_shapes=True)
+                plot_model(self.model, to_file=f"model\\{name}.png", show_shapes=True)
             except:
                 pass 
