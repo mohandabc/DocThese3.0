@@ -10,7 +10,7 @@ path_dataset_test_2 = 'Datasetres\\Dataset\\data2\\test'
 test_gen = DataGenerator(path_dataset_test_1, path_dataset_test_2)
 
 # Load CNN if already trained
-cnn_model = load_model('model\\model.h5')
+cnn_model = load_model('model\\new_model_XYZ_2.h5')
 res = cnn_model.predict(test_gen)
 
 
@@ -24,5 +24,5 @@ s=0
 for i in range(len(real)):
     if rounded[i] == real[i]:
         s+=1
-    print(rounded[i], "=", real[i])
+    # print(rounded[i], "=", real[i])
 print(f"result {s} / {len(rounded)} = {s/len(rounded)}")
