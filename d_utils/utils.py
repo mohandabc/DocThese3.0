@@ -1,6 +1,9 @@
 import numpy as np
 from skimage.segmentation import felzenszwalb,  slic, quickshift, watershed
+from skimage.color import rgb2gray
+from skimage.filters import sobel
 from time import time
+from tensorflow import image
 
 def expand_img(img):
     h_flip = img.copy()[:,::-1]
@@ -58,7 +61,7 @@ def remove_black_corners(img):
     return i, k, j, l
 
 
-def superpixelate(img, method):
+def superpixelate(img, method, config=None):
     """Takes an image and generates a map of superpixels using the methode 
     specified in argument
 
@@ -70,12 +73,17 @@ def superpixelate(img, method):
         numpy array: image devided into superpixels
     """
 
-    config = {
+    configurations = {
     "slic": {'n_segments' : 200, 'compactness' : 5, 'sigma': 50, 'start_label': 1},
     "quickshift": {'kernel_size' : 3, 'max_dist' : 6, 'ratio' : 0.5},
-    "felzenszwalb": {'scale' : 50, 'sigma': 0.5, 'min_size': 50}
+    "felzenszwalb": {'scale' : 50, 'sigma': 0.5, 'min_size': 50},
+    "watershed" : {'markers':250, 'compactness':0.001}
         }
-    cfg = config[method]
+    
+    cfg = configurations[method]
+    if config != None:
+        cfg = config
+
 
     try:
         if method == 'slic':
@@ -84,6 +92,8 @@ def superpixelate(img, method):
             segments = felzenszwalb(img, scale=cfg['scale'], sigma=cfg['sigma'], min_size=cfg['min_size'])
         elif method =='quickshift':
             segments = quickshift(img, kernel_size=cfg['kernel_size'], max_dist=cfg['max_dist'], ratio=cfg['ratio'])
+        elif method == 'watershed':
+            segments = watershed(sobel(rgb2gray(img)), markers = cfg['markers'], compactness=cfg['compactness'])
     except:
         raise Exception("Super pixel method failed")
     return segments
@@ -126,3 +136,50 @@ def timer(function):
         print(f'{function.__name__}: {end - start} s')
         return res
     return wrapper
+
+def sRGB_to_linear(img, normalize = False):
+    if normalize == True:
+        return(img/255)**2.2
+    return (img)**2.2
+def sRGB_to_XYZ(img):
+    res = img.copy()
+    M = np.array([
+        [0.4124564, 0.3575761, 0.1804375],
+        [0.2126729, 0.7151522, 0.072175 ],
+        [0.0193339, 0.119192 , 0.9503041]
+        ])
+    for i in range(img.shape[0]):
+        for j in range (img.shape[1]):
+            res[i,j] = np.dot(M, (img[i,j])**2.2)*100
+    return res
+
+def convert_data(img, data_type):
+    """
+    input shape (x, y, 3)
+    output shape (x, y, 1)
+    """
+    def rgb2r(img):
+        return img[:,:,0]
+    def rgb2g(img):
+        return img[:,:,1]
+    def rgb2b(img):
+        return img[:,:,2]
+    def rgb2rg(img):
+        return img[:,:,0:2]
+    def rgb2gb(img):
+        return img[:,:,1:3]
+    def rgb2rb(img):
+        return img[:,:,0:3:2]
+
+    operations = {
+        'gray' : rgb2gray,
+        'R' : rgb2r,
+        'G' : rgb2g,
+        'B' : rgb2b,
+        'RG' : rgb2rg,
+        'GB' : rgb2gb,
+        'RB' : rgb2rb,
+        'HSV' : image.rgb_to_hsv,
+        'XYZ' : sRGB_to_XYZ,
+    }
+    return operations[data_type](img)
