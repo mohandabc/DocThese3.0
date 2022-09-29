@@ -45,8 +45,9 @@ def generate_windows_for_superpxels(img, w, l):
     pass
 
 @timer
-def segment(img, model : str, size : float= None, superpixelate_method = 'slic'):
+def segment(img, model : str, size : float= None):
     """Segments input image into 2 classes using trained model
+    Classify each pixel of the image
     
     Inputs:
     - img : (any, any, any) image to segment
@@ -68,7 +69,6 @@ def segment(img, model : str, size : float= None, superpixelate_method = 'slic')
         length  = img.shape[1]
         print('resized to : ', img.shape)
 
-    superpixels = utils.superpixelate(img, superpixelate_method)    
     expanded_img = utils.expand_img(img)
     img_gen = genrate_windows(expanded_img, width, length)
 
