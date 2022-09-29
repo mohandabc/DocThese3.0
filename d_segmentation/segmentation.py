@@ -70,8 +70,60 @@ def genrate_windows(img, w, l):
         batch1_t = convert_to_tensor(batch1)
         batch2_t = convert_to_tensor(batch2)
         yield [batch1_t, batch2_t], [] #Last batch may be smaller than 64
-def generate_windows_for_superpxels(img, w, l):
-    pass
+
+def segment_sp(img, model : str, size : float= None, superpixelate_method = 'watershed'):
+    """Segments input image into 2 classes using trained model
+    Classify superpixels generated with superpixelate_method
+    
+    Inputs:
+    - img : (any, any, any) image to segment
+    - model : CNN model trained for the task of classification pixels
+    - size : a factor to rescale img before segmentation, result is scaled back to original
+    - superpixelate_method : method to be used to create superpixel map, slic by default
+
+    Output : segmented image
+    """
+
+    og_width = img.shape[0]
+    og_length = img.shape[1]
+    img = img[:, :, :3] #in case image has alpha channel
+
+    if size != None:
+        img = rescale(img, size, channel_axis=2, anti_aliasing=True)
+        print('resized to : ', img.shape)
+
+    config = {'markers':100, 'compactness':0.0002}
+
+    superpixel_map = utils.superpixelate(img, superpixelate_method, config)
+    expanded_img = utils.expand_img(img)
+    sp_img_gen = generate_windows_superpixels(expanded_img, superpixel_map)
+
+
+    cnn_model = load_model(model)
+    print('Start Segmentation...........\n')
+    prediction = cnn_model.predict(sp_img_gen)
+    print('Segmentation over ...........\n')
+
+    rounded = np.argmax(prediction, axis=-1)
+    # rounded = []
+    # for p in prediction:
+    #     if 0.2 < p[0] < 0.8:
+    #         rounded.append(0.5)
+    #     else:
+    #         rounded.append(np.argmax(p))
+    
+
+    res = np.zeros(superpixel_map.shape, dtype=float)
+    for i, v in enumerate(rounded):
+        res[superpixel_map == i+1] = v
+
+    # unique, counts = np.unique(res, return_counts=True)
+    # print(f"{unique}")
+
+    if size != None:
+        res = resize(res, (og_width, og_length), order=0)
+
+    return res
 
 @timer
 def segment(img, model : str, size : float= None):
