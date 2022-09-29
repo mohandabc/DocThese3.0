@@ -1,3 +1,10 @@
 .venv
 setup.py
-testing/datasetres
+testing/datasetres/
+testing/gts/
+testing/img_to_test/
+testing/models_to_test/
+testing/res/
+model/
+build/
+d_packages.egg-info/
