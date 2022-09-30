@@ -1,5 +1,4 @@
 .venv
-setup.py
 testing/datasetres/
 testing/gts/
 testing/img_to_test/
