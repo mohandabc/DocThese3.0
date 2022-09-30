@@ -71,7 +71,7 @@ def genrate_windows(img, w, l):
         batch2_t = convert_to_tensor(batch2)
         yield [batch1_t, batch2_t], [] #Last batch may be smaller than 64
 
-def segment_sp(img, model : str, size : float= None, superpixelate_method = 'watershed'):
+def segment_sp(img, model : str, size : float= None, superpixelate_method = 'watershed', config = None):
     """Segments input image into 2 classes using trained model
     Classify superpixels generated with superpixelate_method
     
@@ -91,8 +91,6 @@ def segment_sp(img, model : str, size : float= None, superpixelate_method = 'wat
     if size != None:
         img = rescale(img, size, channel_axis=2, anti_aliasing=True)
         print('resized to : ', img.shape)
-
-    config = {'markers':100, 'compactness':0.0002}
 
     superpixel_map = utils.superpixelate(img, superpixelate_method, config)
     expanded_img = utils.expand_img(img)
@@ -123,7 +121,7 @@ def segment_sp(img, model : str, size : float= None, superpixelate_method = 'wat
     if size != None:
         res = resize(res, (og_width, og_length), order=0)
 
-    return res
+    return [res, superpixel_map]
 
 @timer
 def segment(img, model : str, size : float= None):
