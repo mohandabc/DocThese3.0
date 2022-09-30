@@ -26,10 +26,15 @@ for model in models_to_test:
 
         img = io.imread(img_path)
         resize_factor = round((800 / img.shape[0]), 2)
-        segment_result = segmentation.segment(img = img, 
+        config = {'markers':100, 'compactness':0.0002}
+        segment_result, sp_map = segmentation.segment_sp(img = img, 
                                         model = model_path, 
-                                        size=resize_factor,
-                                        superpixelate_method='watershed')
+                                        size=None,
+                                        superpixelate_method='watershed',
+                                        config=config)
+        # segment_result = segmentation.segment(img = img, 
+        #                                 model = model_path, 
+        #                                 size=None)
                                         
         res_name = f'{model_name}_{img_name}.png'
         try:
