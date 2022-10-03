@@ -4,47 +4,35 @@
 from statistics import mode
 from tkinter import image_names
 from skimage import io, img_as_ubyte
-from d_segmentation import segmentation
+from d_segmentation import Segmentation
 import os
+from pathlib import Path
 
+models_path = Path("models_to_test")
+models_to_test = os.listdir(models_path)
+imgs_to_test = Path("img_to_test")
 
-models_to_test = os.listdir("models_to_test\\")
-img_to_test = os.listdir("img_to_test\\")
+results_path = Path("res")
+if not results_path.exists():
+    os.mkdir(Path('res'))
+
 for model in models_to_test:
     model_name = model.split('.')[0]
     data_type = model_name.split('_')[0]
-    model_path = os.path.join("models_to_test\\", model)
-    if data_type != 'RGB':
-        continue
+    model_path = models_path / model
 
     print(f"---------------- USING MODEL {model}-------------------\n")
-    for image in img_to_test:
-        print(f"====> {image}\n")
-        img_name = image.split('.')[0]
+    model_result_path = results_path / model_name
+    if not model_result_path.exists():
+        os.mkdir(model_result_path)
+
+    segmentation = Segmentation(imgs_to_test, model_path, data_type)
+    seg_results = segmentation.f_segmentation()
+
+    print('Start Segmentation...........\n')
+    for seg, name in seg_results:
+        print('Segmentation over ...........\n')
         
-        img_path = os.path.join("img_to_test\\", image)
-
-        img = io.imread(img_path)
-        resize_factor = round((800 / img.shape[0]), 2)
-        config = {'markers':100, 'compactness':0.0002}
-        segment_result, sp_map = segmentation.segment_sp(img = img, 
-                                        model = model_path, 
-                                        size=None,
-                                        superpixelate_method='watershed',
-                                        config=config)
-        # segment_result = segmentation.segment(img = img, 
-        #                                 model = model_path, 
-        #                                 size=None)
-                                        
-        res_name = f'{model_name}_{img_name}.png'
-        try:
-            os.mkdir(f"res\\{model_name}\\")
-        except:
-            pass
-        res_path = os.path.join(f"res\\{model_name}\\", res_name)
-        io.imsave(res_path, img_as_ubyte(segment_result))
-
-        # gt = io.imread(f"gts\\gt_{img_name}.JPG")
-
-        # ret = segmentation.compute_accuracy(segmentation_result=segment_result, ground_truth=gt)
-        # print(f'------->Result\n{ret}\n\n')
+        res_path = model_result_path / name
+        io.imsave(res_path, img_as_ubyte(seg))
+        print('Start Segmentation...........\n')
