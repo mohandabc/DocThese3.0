@@ -98,16 +98,54 @@ def superpixelate(img, method, config=None):
         raise Exception("Super pixel method failed")
     return segments
 
-def find_borders(mask):
+def find_borders(map, superpixel):
     """"Finds borders of the window that contains a superpixel
     
     INPUTS: 
-    - mask : a mask representing a single superpixel
+    - map : the map of superpixels generated
+    - superpixel : the superpixel considered
 
     OUTPUTS:
     - first_x, last_x, first_y, last_y : Coordinates of the window that contains a superpixel
     """
+    W = map.shape[0]
+    L = map.shape[1]
+    first_y = L
+    last_y = 0
+
+    first_x = W
+    last_x = 0
     
+    found_line = False
+    for i in range(0, W, 3):
+        where = np.where(map[i] == superpixel)
+        len_where = len(where[0])
+        
+        if(len_where>0):
+            found_line= True
+            min_y = where[0][0] #np.min(where)
+            max_y = where[0][-1] #np.max(where)
+            if min_y < first_y : first_y = min_y
+            if max_y > last_y : last_y = max_y
+
+            if first_x == W : first_x = i
+            if i > last_x : last_x = i
+        else:
+            if found_line == True:
+                break
+    return first_x, last_x, first_y, last_y
+
+def find_borders_depricated(mask):
+    """"Finds borders of the window that contains a superpixel
+    
+    INPUTS: 
+    - mask : the mask of superpixels generated
+
+    OUTPUTS:
+    - first_x, last_x, first_y, last_y : Coordinates of the window that contains a superpixel
+    """
+
+
     first_x = -1
     last_x = 0
     for i in range(mask.shape[0]):

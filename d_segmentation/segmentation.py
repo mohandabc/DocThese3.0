@@ -111,7 +111,7 @@ class Segmentation:
         batch2 = []
         for c in superpixels:
             mask = sp_map==c
-            x1, x2, y1, y2 = utils.find_borders(mask)
+            x1, x2, y1, y2 = utils.find_borders(sp_map, c)
             center_x = (x1 + x2)//2 + sp_map.shape[0]
             center_y = (y1 + y2)//2 + sp_map.shape[1]
             win1,win2 = self._get_window(img, center_x, center_y)

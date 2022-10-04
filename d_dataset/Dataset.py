@@ -106,8 +106,8 @@ class Dataset():
             for level in range(1, n_levels):
                 if level == 1:
                     #LEVEL 1
-                    mask = segments==c
-                    first_x, last_x, first_y, last_y = find_borders(mask)
+                    # mask = segments==c
+                    first_x, last_x, first_y, last_y = find_borders(segments, c)
                     # The length (last_x - first_x) should be odd in order to have a center
                     # Same for (last_y - first_y)
                     if((last_x - first_x +1)%2) == 0:
