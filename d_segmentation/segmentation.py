@@ -57,14 +57,14 @@ class Segmentation:
                                             model = self.model, 
                                             superpixelate_method='watershed',
                                             config=config_watershed)
-            io.imsave(Path('res') / 'EXTRA' / f'slic_{img_name}', img_as_ubyte(segment_result_slic))
-            io.imsave(Path('res') / 'EXTRA' / f'wat_{img_name}', img_as_ubyte(segment_result_wat))
+            # io.imsave(Path('res') / 'EXTRA' / f'slic_{img_name}', img_as_ubyte(segment_result_slic))
+            # io.imsave(Path('res') / 'EXTRA' / f'wat_{img_name}', img_as_ubyte(segment_result_wat))
 
             difference = segment_result_slic != segment_result_wat
             #TODO impliment this
             intersection = (segment_result_slic==1) & (segment_result_wat ==1)
-            io.imsave(Path('res') / 'EXTRA' / f'diff_{img_name}', img_as_ubyte(difference))
-            io.imsave(Path('res') / 'EXTRA' / f'inter_{img_name}', img_as_ubyte(intersection))
+            # io.imsave(Path('res') / 'EXTRA' / f'diff_{img_name}', img_as_ubyte(difference))
+            # io.imsave(Path('res') / 'EXTRA' / f'inter_{img_name}', img_as_ubyte(intersection))
             expanded_img = utils.expand_img(image)
             difference_gen = self.generate_windows(expanded_img, image.shape[0], image.shape[1], difference)
             predictions = self.model.predict(difference_gen)
@@ -166,8 +166,6 @@ class Segmentation:
         Output : segmented image
         """
 
-        og_width = img.shape[0]
-        og_length = img.shape[1]
         img = img[:, :, :3] #in case image has alpha channel
 
         
@@ -178,23 +176,11 @@ class Segmentation:
 
         prediction = model.predict(sp_img_gen)
 
-        rounded = np.argmax(prediction, axis=-1)
-        # rounded = []
-        # for p in prediction:
-        #     if 0.2 < p[0] < 0.8:
-        #         rounded.append(0.5)
-        #     else:
-        #         rounded.append(np.argmax(p))
-        
+        rounded = np.argmax(prediction, axis=-1)     
 
         res = np.zeros(superpixel_map.shape, dtype=float)
         for i, v in enumerate(rounded):
-            res[superpixel_map == i+1] = v
-
-        # unique, counts = np.unique(res, return_counts=True)
-        # print(f"{unique}")
-
-        
+            res[superpixel_map == i+1] = v       
 
         return [res, superpixel_map]
 
