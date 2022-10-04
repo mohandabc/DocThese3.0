@@ -22,12 +22,14 @@ class ImageReader:
             yield img, img_name
 
 class Segmentation:
-    def __init__(self, imgs_path : Path, model_path : Path, data_type = 'RGB'):
+    def __init__(self, imgs_path : Path = None, model_path : Path = None, data_type :str = 'RGB'):
         self.imgs_path = imgs_path
         self.data_type = data_type
-        self.img_reader = ImageReader(self.imgs_path, self.data_type)
+        if imgs_path != None:
+            self.img_reader = ImageReader(self.imgs_path, self.data_type)
         self.model_path = model_path
-        self.model = load_model(model_path)
+        if model_path != None:
+            self.model = load_model(model_path)
         # self.superpixel_method
 
     def f_segmentation(self):
