@@ -41,24 +41,20 @@ def remove_black_corners(img):
     limit = 50
     stop = False
     i = 1
-    j = 1
     while not stop:
-        if gray[i, j]>threshold or i == limit:
+        if gray[i, i]>threshold or i == limit:
             stop = True
         else:
             i+=1
-            j+=1
     stop = False
     k = -2
-    l = -2
     while not stop:
-        if gray[k, l]>threshold or k == -limit:
+        if gray[k, k]>threshold or k == -limit:
             stop = True
         else:
             k-=1
-            l-=1
     
-    return i, k, j, l
+    return i, k, i, k
 
 
 def superpixelate(img, method, config=None):
