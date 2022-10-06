@@ -1,8 +1,5 @@
 .venv
 testing/datasetres/
-testing/gts/
-testing/img_to_test/
-testing/models_to_test/
 testing/res/
 model/
 build/
