@@ -25,14 +25,18 @@ for model in models_to_test:
     model_result_path = results_path / model_name
     if not model_result_path.exists():
         os.mkdir(model_result_path)
+    if not (model_result_path / 'EXTRA').exists():
+        os.mkdir(model_result_path / 'EXTRA')
 
     segmentation = Segmentation(imgs_to_test, model_path, data_type)
     seg_results = segmentation.f_segmentation()
 
     print('Start Segmentation...........\n')
-    for seg, name in seg_results:
+    for seg, name, sp1, sp2 in seg_results:
         print('Segmentation over ...........\n')
         
         res_path = model_result_path / name
         io.imsave(res_path, img_as_ubyte(seg))
+        io.imsave(model_result_path / 'EXTRA' / f'slic_{name}', img_as_ubyte(sp1))
+        io.imsave(model_result_path / 'EXTRA' / f'wat_{name}', img_as_ubyte(sp2))
         print('Start Segmentation...........\n')
