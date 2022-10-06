@@ -1,9 +1,17 @@
 import numpy as np
 from skimage.segmentation import felzenszwalb,  slic, quickshift, watershed
+from skimage import restoration,morphology, color
 from skimage.color import rgb2gray
 from skimage.filters import sobel
 from time import time
 from tensorflow import image
+
+def remove_hair(image):
+    gray = color.rgb2gray(image)
+    black_hat = morphology.black_tophat(gray)
+    threshold = black_hat > 0.04
+    image_result = restoration.inpaint.inpaint_biharmonic(image, threshold, channel_axis=-1)
+    return image_result
 
 def expand_img(img):
     h_flip = img.copy()[:,::-1]
@@ -54,7 +62,7 @@ def remove_black_corners(img):
         else:
             k-=1
     
-    return i, k, i, k
+    return i, k
 
 
 def superpixelate(img, method, config=None):
