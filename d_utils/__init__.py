@@ -4,3 +4,4 @@ from .utils import expand_img
 from .utils import remove_black_corners
 from .utils import timer
 from .utils import convert_data
+from .utils import remove_hair

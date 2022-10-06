@@ -1,7 +1,6 @@
 from skimage.transform import rescale, resize
 from keras.models import load_model
 from skimage import io
-from skimage import io, img_as_ubyte
 from tensorflow import convert_to_tensor
 import numpy as np
 from d_utils import utils, timer
@@ -39,11 +38,16 @@ class Segmentation:
         added to the intersection to create final segmentation
         """
         
-        config_watershed = {'markers':100, 'compactness':0.0002}
-        config_slic ={'n_segments' : 50, 'compactness' : 5, 'sigma': 50, 'start_label': 1}
+        config_watershed = {'markers':50, 'compactness':0.0002}
+        config_slic ={'n_segments' : 50, 'compactness' : 1, 'sigma': 50, 'start_label': 1}
 
         resize_factor = None
         for image, img_name in self.img_reader.read():
+
+            i_cut, j_cut = utils.remove_black_corners(image)
+            image = image[i_cut:j_cut, i_cut:j_cut]
+            image = utils.remove_hair(image)
+
             og_image_shape = image.shape
             # if image height is higher than 400px reduce size to 400px, keep ratio 
             if image.shape[0]>300:
@@ -59,14 +63,13 @@ class Segmentation:
                                             model = self.model, 
                                             superpixelate_method='watershed',
                                             config=config_watershed)
-            # io.imsave(Path('res') / 'EXTRA' / f'slic_{img_name}', img_as_ubyte(segment_result_slic))
-            # io.imsave(Path('res') / 'EXTRA' / f'wat_{img_name}', img_as_ubyte(segment_result_wat))
 
             difference = segment_result_slic != segment_result_wat
-            #TODO impliment this
+            
             intersection = (segment_result_slic==1) & (segment_result_wat ==1)
             # io.imsave(Path('res') / 'EXTRA' / f'diff_{img_name}', img_as_ubyte(difference))
             # io.imsave(Path('res') / 'EXTRA' / f'inter_{img_name}', img_as_ubyte(intersection))
+            
             expanded_img = utils.expand_img(image)
             difference_gen = self.generate_windows(expanded_img, image.shape[0], image.shape[1], difference)
             predictions = self.model.predict(difference_gen)
@@ -87,9 +90,29 @@ class Segmentation:
                     break
             # if size != None:
             res = resize(intersection, og_image_shape, order=0)
-        
-            yield res, img_name
+
+            res = self.restore_cut_parts(res, i_cut, j_cut)
+            yield res, img_name, segment_result_slic, segment_result_wat
     
+    def restore_cut_parts(self, image, i, j):
+        d = 1
+        if len(image.shape) == 3:
+            w, l, d = image.shape
+        else:
+            w, l = image.shape
+        
+
+        left_block = np.zeros((w, i, d))
+        right_block = np.zeros((w, abs(j), d))
+
+        top_block = np.zeros((i, l+i+abs(j), d))
+        bottom_block = np.zeros((abs(j), l+i+abs(j), d))
+
+        line = np.concatenate((left_block,image, right_block), axis=1)
+        res = np.concatenate((top_block, line, bottom_block), axis=0)
+        
+        return res
+
     def _get_window(self, img, centerX, centerY):
         minX = centerX-15
         maxX = centerX + 16
@@ -139,6 +162,7 @@ class Segmentation:
             for col in range(l, 2*l):
                 if not diff_mask is None and diff_mask[line-w, col-l] == False:
                     continue
+                print('-')
                 win1, win2 = self._get_window(img, line, col)
 
                 batch1.append(win1)
