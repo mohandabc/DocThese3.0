@@ -8,6 +8,7 @@ from tensorflow import image
 
 def remove_hair(image):
     if len(image.shape) < 3:
+        print('nothing to do')
         return image
     gray = color.rgb2gray(image)
     black_hat = morphology.black_tophat(gray)
