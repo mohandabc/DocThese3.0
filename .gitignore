@@ -1,6 +1,7 @@
 .venv
 testing/datasetres/
 testing/res/
+testing/models_to_test/
 model/
 build/
 d_packages.egg-info/
