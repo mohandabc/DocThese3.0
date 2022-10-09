@@ -14,6 +14,7 @@ def remove_hair(image):
     black_hat = morphology.black_tophat(gray)
     threshold = black_hat > 0.04
     image_result = restoration.inpaint.inpaint_biharmonic(image, threshold, channel_axis=-1)
+    print('hair removed')
     return image_result
 
 def expand_img(img):
