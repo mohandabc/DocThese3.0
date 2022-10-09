@@ -255,12 +255,12 @@ class Segmentation:
             img = resize(img, (og_width, og_length), order=0)
 
         return img
-
-    def compute_accuracy(self, segmentation_result, ground_truth):
+    @staticmethod
+    def compute_accuracy(segmentation_result, ground_truth):
         seg_res = segmentation_result[:,:,0]
         g_truth = ground_truth[:,:,0]
-        w = seg_res.shape[0]
-        l = seg_res.shape[1]
+        w, l = seg_res.shape
+
         N=w*l
         TP = TN = FP = FN = 0
 
