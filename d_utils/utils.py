@@ -7,6 +7,8 @@ from time import time
 from tensorflow import image
 
 def remove_hair(image):
+    if len(image.shape) < 3:
+        return image
     gray = color.rgb2gray(image)
     black_hat = morphology.black_tophat(gray)
     threshold = black_hat > 0.04
@@ -38,31 +40,32 @@ def remove_black_corners(img):
     - img : and RGB image.
 
     OUTPUTS:
-    - i, j, k, l : Indecies; crop image from column i to k and line j to l.
+    - i, j : Indecies; crop image from column i to j and line i to j.
     """
     
-    r, g, b = img[:,:,0], img[:,:,1], img[:,:,2]
-    
     #convert to grayscal image
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-    threshold = 128
-    limit = 50
+    gray = img.copy()
+    if len(img.shape) == 3:
+        gray = rgb2gray(img)
+    threshold = 0.3
+    i_limit = img.shape[0]*0.6
+    j_limit = img.shape[1]*0.6 
     stop = False
     i = 1
     while not stop:
-        if gray[i, i]>threshold or i == limit:
+        if (gray[i, i]>threshold).all() or i >= i_limit:
             stop = True
         else:
-            i+=1
+            i+=2
     stop = False
-    k = -2
+    j = -2
     while not stop:
-        if gray[k, k]>threshold or k == -limit:
+        if (gray[j, j]>threshold).all() or j <= -j_limit:
             stop = True
         else:
-            k-=1
+            j-=2
     
-    return i, k
+    return i, j
 
 
 def superpixelate(img, method, config=None):
