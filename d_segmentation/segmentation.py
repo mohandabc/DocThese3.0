@@ -1,6 +1,6 @@
 from skimage.transform import rescale, resize
 from keras.models import load_model
-from skimage import io
+from skimage import io, color
 from tensorflow import convert_to_tensor
 import numpy as np
 from d_utils import utils, timer
@@ -8,16 +8,14 @@ import os
 from pathlib import Path
 
 class ImageReader:
-    def __init__(self, path :Path, data_type = 'RGB'):
+    def __init__(self, path :Path):
         self.path = path
-        self.data_type = data_type
 
     def read(self):      
         img_list = os.listdir(self.path)
         for img_name in img_list:
-            img = io.imread(os.path.join(self.path, img_name))
-            if self.data_type != 'RGB':
-                img = utils.convert_data(img, self.data_type)
+            img = io.imread(self.path / img_name)
+            
             yield img, img_name
 
 class Segmentation:
@@ -25,7 +23,7 @@ class Segmentation:
         self.imgs_path = imgs_path
         self.data_type = data_type
         if imgs_path != None:
-            self.img_reader = ImageReader(self.imgs_path, self.data_type)
+            self.img_reader = ImageReader(self.imgs_path)
         self.model_path = model_path
         if model_path != None:
             self.model = load_model(model_path)
@@ -52,9 +50,9 @@ class Segmentation:
             # if image height is higher than 400px reduce size to 400px, keep ratio 
             if image.shape[0]>300:
                 resize_factor = round((300 / image.shape[0]), 2)
-            # if size != None:
                 image = rescale(image, resize_factor, channel_axis=2, anti_aliasing=True)
                 print('resized to : ', image.shape)
+
             segment_result_slic, sp_map1 = self.segment_sp(img = image, 
                                             model = self.model, 
                                             superpixelate_method='slic',
@@ -70,6 +68,10 @@ class Segmentation:
             # io.imsave(Path('res') / 'EXTRA' / f'diff_{img_name}', img_as_ubyte(difference))
             # io.imsave(Path('res') / 'EXTRA' / f'inter_{img_name}', img_as_ubyte(intersection))
             
+            # rgb_image = image.copy()
+            if self.data_type != 'RGB':
+                # image = color.convert_colorspace(image, 'RGB', self.data_type)
+                image = utils.convert_data(image, self.data_type)
             expanded_img = utils.expand_img(image)
             difference_gen = self.generate_windows(expanded_img, image.shape[0], image.shape[1], difference)
             predictions = self.model.predict(difference_gen)
@@ -135,7 +137,6 @@ class Segmentation:
         batch1 = []
         batch2 = []
         for c in superpixels:
-            mask = sp_map==c
             x1, x2, y1, y2 = utils.find_borders(sp_map, c)
             center_x = (x1 + x2)//2 + sp_map.shape[0]
             center_y = (y1 + y2)//2 + sp_map.shape[1]
@@ -162,7 +163,6 @@ class Segmentation:
             for col in range(l, 2*l):
                 if not diff_mask is None and diff_mask[line-w, col-l] == False:
                     continue
-                print('-')
                 win1, win2 = self._get_window(img, line, col)
 
                 batch1.append(win1)
@@ -191,12 +191,13 @@ class Segmentation:
 
         Output : segmented image
         """
-
-        img = img[:, :, :3] #in case image has alpha channel
-
-        
+        if len(img.shape)>3:
+            img = img[:, :, :3] #in case image has alpha channel
 
         superpixel_map = utils.superpixelate(img, superpixelate_method, config)
+        if self.data_type != 'RGB':
+            # img = color.convert_colorspace(img, 'RGB', self.data_type)
+            img = utils.convert_data(img, self.data_type)
         expanded_img = utils.expand_img(img)
         sp_img_gen = self.generate_windows_superpixels(expanded_img, superpixel_map)
 
