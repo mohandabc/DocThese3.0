@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 
 path_dataset_1 = 'Datasetres\\Dataset\\data1\\train'
 path_dataset_2 = 'Datasetres\\Dataset\\data2\\train'
-cnn_name = "new_model_XYZ_3"
+cnn_name = "Last_cnn"
 train_gen = DataGenerator(path_dataset_1, path_dataset_2, seed=1, validation_split=0.2, subset='train')
 validation = DataGenerator(path_dataset_1, path_dataset_2, seed=1, validation_split=0.2, subset='validation')
 
 cnn_model = CNN()
-cnn_model.set_config('epochs', 10)
+cnn_model.set_config('epochs', 100)
 cnn_model.display(name = cnn_name, graph = True)
 
 
