@@ -41,10 +41,9 @@ class Segmentation:
 
         resize_factor = None
         for image, img_name in self.img_reader.read():
-
+            print(f'==+>{img_name}\n')
             i_cut, j_cut = utils.remove_black_corners(image)
             image = image[i_cut:j_cut, i_cut:j_cut]
-            image = utils.remove_hair(image)
 
             og_image_shape = image.shape
             # if image height is higher than 400px reduce size to 400px, keep ratio 
@@ -53,6 +52,7 @@ class Segmentation:
                 image = rescale(image, resize_factor, channel_axis=2, anti_aliasing=True)
                 print('resized to : ', image.shape)
 
+            image = utils.remove_hair(image)
             segment_result_slic, sp_map1 = self.segment_sp(img = image, 
                                             model = self.model, 
                                             superpixelate_method='slic',
@@ -74,7 +74,13 @@ class Segmentation:
                 image = utils.convert_data(image, self.data_type)
             expanded_img = utils.expand_img(image)
             difference_gen = self.generate_windows(expanded_img, image.shape[0], image.shape[1], difference)
-            predictions = self.model.predict(difference_gen)
+            # if len(difference_gen)<=0:
+            try:
+                predictions = self.model.predict(difference_gen)
+            except:
+                yield intersection, img_name, segment_result_slic, segment_result_wat
+                continue
+
             rounded = np.argmax(predictions, axis=-1)
             print(f"{len(rounded)} Pixels reclassified")
 
@@ -258,7 +264,9 @@ class Segmentation:
     @staticmethod
     def compute_accuracy(segmentation_result, ground_truth):
         seg_res = segmentation_result[:,:,0]
-        g_truth = ground_truth[:,:,0]
+        if len(ground_truth.shape)>=3:
+            g_truth = ground_truth[:,:,0]
+        g_truth = ground_truth
         w, l = seg_res.shape
 
         N=w*l
