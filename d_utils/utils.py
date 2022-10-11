@@ -5,17 +5,22 @@ from skimage.color import rgb2gray
 from skimage.filters import sobel
 from time import time
 from tensorflow import image
+import cv2
 
-def remove_hair(image):
+def remove_hair(img):
+    image = img.copy()
     if len(image.shape) < 3:
-        print('nothing to do')
         return image
-    gray = color.rgb2gray(image)
-    black_hat = morphology.black_tophat(gray)
-    threshold = black_hat > 0.04
-    image_result = restoration.inpaint.inpaint_biharmonic(image, threshold, channel_axis=-1)
-    print('hair removed')
-    return image_result
+    print(image.shape)
+    
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    grayScale = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY )
+    kernel = cv2.getStructuringElement(1,(17,17))
+    blackhat = cv2.morphologyEx(grayScale, cv2.MORPH_BLACKHAT, kernel)
+    ret,thresh2 = cv2.threshold(blackhat,10,255,cv2.THRESH_BINARY)
+    dst = cv2.inpaint(image,thresh2,1,cv2.INPAINT_TELEA)
+    dst = cv2.cvtColor(dst, cv2.COLOR_BGR2RGB)
+    return dst
 
 def expand_img(img):
     h_flip = img.copy()[:,::-1]
