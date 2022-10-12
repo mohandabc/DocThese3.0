@@ -6,6 +6,7 @@ from keras.models import Model, load_model
 from keras.layers import Conv2D, Dense, MaxPooling2D, Flatten, Dropout, concatenate, Input
 from keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
+from keras.callbacks import EarlyStopping
 from d_utils import timer
 
 
@@ -14,7 +15,7 @@ CONFIG ={
     'shapes' : [(31, 31, 3), (63, 63, 3)],
     'kernel_sizes' : [2, 4],
     'pool_sizes' : [2, 4],
-    'filters' : 100,
+    'filters' : 1024,
 
     'batch_size' : 64,
     'epochs' : 10,
@@ -46,9 +47,10 @@ class CNN():
             M.append(L)
 
         M = concatenate(inputs = M)
-        M = Conv2D(filters = 100, kernel_size = 4, activation='relu')(M)
+        M = Conv2D(filters = 1024, kernel_size = 4, activation='relu')(M)
         M = MaxPooling2D(pool_size = 2)(M)
-        M = Conv2D(filters = 100, kernel_size = 3, activation='relu')(M)
+        M = Dropout(0.2)(M)
+        M = Conv2D(filters = 1024, kernel_size = 3, activation='relu')(M)
         M = MaxPooling2D(pool_size = 4)(M)
         M = Dropout(0.2)(M)
 
@@ -62,7 +64,7 @@ class CNN():
 
     @timer
     def train(self, train_gen, validation_gen):
-
+        callback = EarlyStopping(monitor='loss', patience=3)
         self.model.compile(
             loss='sparse_categorical_crossentropy',
             optimizer=Adam(learning_rate=0.001),
@@ -73,6 +75,7 @@ class CNN():
             validation_data=validation_gen,
             batch_size=self.config['batch_size'],
             epochs=self.config['epochs'], 
+            callbacks=[callback],
             verbose=1,
         )
         return history
