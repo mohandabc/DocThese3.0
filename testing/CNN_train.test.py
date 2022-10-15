@@ -1,9 +1,12 @@
 from d_CNN import CNN
 from d_dataset import DataGenerator
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-path_dataset_1 = 'Datasetres\\Dataset\\data1\\train'
-path_dataset_2 = 'Datasetres\\Dataset\\data2\\train'
+path = Path('Datasetres/Dataset')
+
+path_dataset_1 = path / 'data1' / 'train'
+path_dataset_2 = path / 'data2' / 'train'
 cnn_name = "Last_cnn"
 train_gen = DataGenerator(path_dataset_1, path_dataset_2, seed=1, validation_split=0.2, subset='train')
 validation = DataGenerator(path_dataset_1, path_dataset_2, seed=1, validation_split=0.2, subset='validation')
@@ -22,8 +25,8 @@ import numpy as np
 from keras.models import load_model
 
 # Predict on test dataset
-path_dataset_test_1 = 'Datasetres\\Dataset\\data1\\test'
-path_dataset_test_2 = 'Datasetres\\Dataset\\data2\\test'
+path_dataset_test_1 = path / 'data1' / 'test'
+path_dataset_test_2 = path / 'data2' / 'test'
 test_gen = DataGenerator(path_dataset_test_1, path_dataset_test_2)
 
 # Load CNN if already trained
