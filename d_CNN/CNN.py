@@ -15,7 +15,7 @@ CONFIG ={
     'shapes' : [(31, 31, 3), (63, 63, 3)],
     'kernel_sizes' : [2, 4],
     'pool_sizes' : [2, 4],
-    'filters' : 1024,
+    'filters' : 512,
 
     'batch_size' : 64,
     'epochs' : 10,
@@ -47,10 +47,10 @@ class CNN():
             M.append(L)
 
         M = concatenate(inputs = M)
-        M = Conv2D(filters = 1024, kernel_size = 4, activation='relu')(M)
+        M = Conv2D(filters = 512, kernel_size = 4, activation='relu')(M)
         M = MaxPooling2D(pool_size = 2)(M)
         M = Dropout(0.2)(M)
-        M = Conv2D(filters = 1024, kernel_size = 3, activation='relu')(M)
+        M = Conv2D(filters = 256, kernel_size = 3, activation='relu')(M)
         M = MaxPooling2D(pool_size = 4)(M)
         M = Dropout(0.2)(M)
 
