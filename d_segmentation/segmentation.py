@@ -3,7 +3,7 @@ from keras.models import load_model
 from skimage import io, color
 from tensorflow import convert_to_tensor
 import numpy as np
-from d_utils import utils, timer
+from d_utils import utils, timer, getLargestCC
 import os 
 from pathlib import Path
 
@@ -96,11 +96,13 @@ class Segmentation:
                             break
                 if(i>=len(rounded)):
                     break
+
+            res = getLargestCC(intersection)
             # if size != None:
-            res = resize(intersection, og_image_shape, order=0)
+            segmentation = resize(res, og_image_shape, order=0)
 
             res = self.restore_cut_parts(res, i_cut, j_cut)
-            yield res, img_name, segment_result_slic, segment_result_wat
+            yield segmentation, img_name, segment_result_slic, segment_result_wat
     
     def restore_cut_parts(self, image, i, j):
         d = 1
