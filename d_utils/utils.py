@@ -1,11 +1,16 @@
 import numpy as np
 from skimage.segmentation import felzenszwalb,  slic, quickshift, watershed
-from skimage import restoration,morphology, color
+from skimage.measure import label
 from skimage.color import rgb2gray
 from skimage.filters import sobel
 from time import time
 from tensorflow import image
 import cv2
+
+def getLargestCC(segmentation):
+    labels, _ = label(segmentation, background=0, return_num=True, connectivity=1)
+    largestCC = labels == np.argmax(np.bincount(labels.flat, weights=segmentation.flat))
+    return largestCC
 
 def remove_hair(img):
     image = img.copy()

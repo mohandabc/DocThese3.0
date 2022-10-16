@@ -3,7 +3,7 @@ from d_dataset import DataGenerator
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-path = Path('Datasetres/Dataset')
+path = Path('dataset')
 
 path_dataset_1 = path / 'data1' / 'train'
 path_dataset_2 = path / 'data2' / 'train'
