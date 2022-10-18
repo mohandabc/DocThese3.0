@@ -6,3 +6,4 @@ matplotlib
 pydot
 graphviz
 streamlit
+pytest==7.1.3
