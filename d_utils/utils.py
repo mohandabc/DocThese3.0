@@ -16,7 +16,6 @@ def remove_hair(img):
     image = img.copy()
     if len(image.shape) < 3:
         return image
-    print(image.shape)
     
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     grayScale = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY )
