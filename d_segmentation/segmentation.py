@@ -99,9 +99,9 @@ class Segmentation:
 
             res = getLargestCC(intersection)
             # if size != None:
-            segmentation = resize(res, og_image_shape, order=0)
+            res = resize(res, og_image_shape, order=0)
 
-            res = self.restore_cut_parts(res, i_cut, j_cut)
+            segmentation = self.restore_cut_parts(res, i_cut, j_cut)
             yield segmentation, img_name, segment_result_slic, segment_result_wat
     
     def restore_cut_parts(self, image, i, j):
