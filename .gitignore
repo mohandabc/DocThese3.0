@@ -5,3 +5,4 @@ testing/models_to_test/
 model/
 build/
 d_packages.egg-info/
+d_utils/__pycache__/
