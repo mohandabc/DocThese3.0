@@ -1,23 +1,29 @@
 import numpy as np
 from skimage.segmentation import felzenszwalb,  slic, quickshift, watershed
 from skimage.measure import label
-from skimage.color import rgb2gray
+from skimage.color import rgb2gray, rgb2hsv
 from skimage.filters import sobel
 from time import time
-from tensorflow import image
 import cv2
 
 def getLargestCC(segmentation):
     labels, _ = label(segmentation, background=0, return_num=True, connectivity=1)
     largestCC = labels == np.argmax(np.bincount(labels.flat, weights=segmentation.flat))
-    return largestCC
+    return largestCC.astype(np.uint8)
 
 def remove_hair(img):
     image = img.copy()
-    if len(image.shape) < 3:
-        return image
-    print(image.shape)
+    if image.dtype not in (np.float64, np.float32, np.uint8):
+        raise TypeError('Provided image is not in a supported data type : float64, float32 or uint8')
+
+    if len(image.shape) < 3 or image.shape[2] <3:
+        return image.astype(np.float64)
     
+    if image.dtype in (np.float64, np.float32):
+        # cause image come normalized
+        image = image * 255
+        image = image.astype(np.uint8)
+
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     grayScale = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY )
     kernel = cv2.getStructuringElement(1,(17,17))
@@ -25,7 +31,9 @@ def remove_hair(img):
     ret,thresh2 = cv2.threshold(blackhat,10,255,cv2.THRESH_BINARY)
     dst = cv2.inpaint(image,thresh2,1,cv2.INPAINT_TELEA)
     dst = cv2.cvtColor(dst, cv2.COLOR_BGR2RGB)
-    return dst
+    
+    dst = normalize(dst).astype(np.float64)
+    return dst 
 
 def expand_img(img):
     h_flip = img.copy()[:,::-1]
@@ -54,11 +62,17 @@ def remove_black_corners(img):
     OUTPUTS:
     - i, j : Indecies; crop image from column i to j and line i to j.
     """
+
+    if img.dtype not in (np.uint8, np.float32, np.float64):
+        raise TypeError("Image data type should be unit8, float32 or float64")
     
+    if img.dtype == np.uint8:
+        img = (img / 255).astype(np.float64)
     #convert to grayscal image
-    gray = img.copy()
-    if len(img.shape) == 3:
+    gray = img.copy().astype(np.float64)
+    if len(img.shape) == 3 and img.shape[2] == 3:
         gray = rgb2gray(img)
+      
     threshold = 0.3
     i_limit = img.shape[0]*0.6
     j_limit = img.shape[1]*0.6 
@@ -155,7 +169,9 @@ def find_borders(map, superpixel):
     return first_x, last_x, first_y, last_y
 
 def find_borders_depricated(mask):
-    """"Finds borders of the window that contains a superpixel
+    """"
+    Depricated, precise but slower
+    Finds borders of the window that contains a superpixel
     
     INPUTS: 
     - mask : the mask of superpixels generated
@@ -194,9 +210,11 @@ def timer(function):
         return res
     return wrapper
 
+def normalize(img):
+    return img / 255
 def sRGB_to_linear(img, normalize = False):
     if normalize == True:
-        return(img/255)**2.2
+        return normalize(img)**2.2
     return (img)**2.2
 def sRGB_to_XYZ(img):
     res = img.copy()
@@ -236,7 +254,7 @@ def convert_data(img, data_type):
         'RG' : rgb2rg,
         'GB' : rgb2gb,
         'RB' : rgb2rb,
-        'HSV' : image.rgb_to_hsv,
+        'HSV' : rgb2hsv,
         'XYZ' : sRGB_to_XYZ,
     }
     return operations[data_type](img)
