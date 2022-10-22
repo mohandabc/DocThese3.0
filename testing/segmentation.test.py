@@ -1,8 +1,6 @@
 # In this file we will use the trained model to segment, then perform a diagnosis
 
 
-from statistics import mode
-from tkinter import image_names
 from skimage import io, img_as_ubyte
 from d_segmentation import Segmentation
 import os

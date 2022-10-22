@@ -1,4 +1,4 @@
-from d_segmentation import Segmentation
+from d_segmentation import compute_performance
 from skimage import io
 from pathlib import Path
 import os 
@@ -22,7 +22,7 @@ for model_results in results_per_model:
         res_img = io.imread(res_path)
         gt_img = io.imread(gt_path)
 
-        accuracy = Segmentation.compute_accuracy(res_img, gt_img)
+        accuracy = compute_performance(res_img, gt_img)
         accuracy['img'] = f"{res} -- {gt}"
         results_dict.append(accuracy)
         # print(f"{res} -- {gt}\n  {accuracy}\n\n")
